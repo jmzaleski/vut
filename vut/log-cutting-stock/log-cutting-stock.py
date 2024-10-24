@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 # Explanation:
 # Input Files: The data for the boards (boards.csv) and logs (logs.csv) is read using pandas.
 # Decision Variables: For each combination of board length and log, we create a decision variable cut_vars[i, j], which represents how many times a board of size i will be cut from log j.
@@ -13,7 +13,10 @@ from pulp import LpMaximize, LpProblem, LpVariable, lpSum, value
 
 # Read data from CSV files
 boards_df = pd.read_csv('boards.csv')
+print(boards_df)
+
 logs_df = pd.read_csv('logs.csv')
+print(logs_df)
 
 # Extract board sizes and demand
 board_lengths = boards_df['Board_Length'].tolist()
@@ -22,13 +25,18 @@ board_demand = boards_df['Demand'].tolist()
 # Extract log lengths
 log_lengths = logs_df['Log_Length'].tolist()
 
-# Create LP problem
+# Create a linear programming problem for the Cutting Stock Problem, 
+# second parm to constructor asks PULP  maximize the objective
+
 prob = LpProblem("Cutting_Stock_Problem", LpMaximize)
 
 # Decision variables: How many times to cut each board length from each log
+# basically each board in our required cut list is a LP variable. 
+# 
 cut_vars = {(i, j): LpVariable(f"cut_board_{i}_from_log_{j}", lowBound=0, cat="Integer")
             for i in range(len(board_lengths)) 
             for j in range(len(log_lengths))}
+print(cut_vars)
 
 # Objective: Maximize the total number of boards cut
 prob += lpSum(cut_vars[i, j] for i in range(len(board_lengths)) for j in range(len(log_lengths)))
@@ -51,7 +59,8 @@ for i in range(len(board_lengths)):
     for j in range(len(log_lengths)):
         cut_count = value(cut_vars[i, j])
         if cut_count > 0:
-            print(f"Cut {cut_count} boards of length {board_lengths[i]} from log {log_lengths[j]}")
+            print(f"Cut {int(cut_count)} boards of length {board_lengths[i]} from log {i} of length {log_lengths[j]}")
+
 
 # Total number of boards cut
 total_boards_cut = sum(value(cut_vars[i, j]) for i in range(len(board_lengths)) for j in range(len(log_lengths)))
